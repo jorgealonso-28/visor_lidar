@@ -1,0 +1,67 @@
+{
+  "layers": [
+    {
+      "id": "Alta_diversidad_herbaceas_incectos",
+      "name": "Alta_diversidad_herbaceas_incectos",
+      "path": "/vector_z/Alta_diversidad_herbaceas_incectos_z.geojson",
+      "type": "polygon",
+      "visible": true
+    },
+    {
+      "id": "Area_estudio",
+      "name": "Area_estudio",
+      "path": "/vector_z/Area_estudio_z.geojson",
+      "type": "polygon",
+      "visible": true
+    },
+    {
+      "id": "Cauce",
+      "name": "Cauce",
+      "path": "/vector_z/Cauce_z.geojson",
+      "type": "polygon",
+      "visible": true
+    },
+    {
+      "id": "Charcas_temporales",
+      "name": "Charcas_temporales",
+      "path": "/vector_z/Charcas_temporales_z.geojson",
+      "type": "point",
+      "visible": true
+    },
+    {
+      "id": "Conservacion_sp_arcillas_verdes",
+      "name": "Conservacion_sp_arcillas_verdes",
+      "path": "/vector_z/Conservacion_sp_arcillas_verdes_z.geojson",
+      "type": "polygon",
+      "visible": true
+    },
+    {
+      "id": "Depresiones_no_exisentes",
+      "name": "Depresiones_no_exisentes",
+      "path": "/vector_z/Depresiones_no_exisentes_z.geojson",
+      "type": "polygon",
+      "visible": true
+    },
+    {
+      "id": "Individuos_lavatera_triloba",
+      "name": "Individuos_lavatera_triloba",
+      "path": "/vector_z/Individuos_lavatera_triloba_z.geojson",
+      "type": "point",
+      "visible": true
+    },
+    {
+      "id": "Lagunas_permanentes",
+      "name": "Lagunas_permanentes",
+      "path": "/vector_z/Lagunas_permanentes_z.geojson",
+      "type": "polygon",
+      "visible": true
+    },
+    {
+      "id": "Zanja",
+      "name": "Zanja",
+      "path": "/vector_z/Zanja_z.geojson",
+      "type": "polygon",
+      "visible": true
+    }
+  ]
+}
