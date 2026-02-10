@@ -97,14 +97,6 @@ html, body {
   height: 100%;
   background-color: #020617; /* Fondo de seguridad muy oscuro */
 
-  /* Fade-in para evitar salto visual al cargar LiDAR */
-  opacity: 0;
-  transition: opacity 200ms ease;
-}
-
-/* Se activa cuando termina la carga */
-#map.ready {
-  opacity: 1;
 }
 
 @media (prefers-color-scheme: light) {
