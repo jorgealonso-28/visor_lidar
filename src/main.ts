@@ -17,8 +17,7 @@ const map = new maplibregl.Map({
   center: [-3.59222, 40.42186],
   zoom: 12,
   pitch: 60,
-  maxPitch: 85,
-  antialias: true
+  maxPitch: 85
 });
 
 // --- HUD DE COORDENADAS ---
