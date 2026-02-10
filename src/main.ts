@@ -22,8 +22,7 @@ const map = new maplibregl.Map({
   zoom: TARGET_ZOOM,
   pitch: TARGET_PITCH,
   bearing: 0,
-  maxPitch: 85,
-  antialias: true
+  maxPitch: 85
 });
 
 // --- HUD DE COORDENADAS ---
