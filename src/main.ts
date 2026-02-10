@@ -1,45 +1,104 @@
 import "./style.css";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-
 import { LidarControl } from "maplibre-gl-lidar";
 import "maplibre-gl-lidar/style.css";
 
-type Dataset = { id: string; name: string; url: string };
-
-async function loadDatasets(): Promise<Dataset[]> {
+async function loadDatasets() {
   const res = await fetch("/datasets.json", { cache: "no-store" });
   if (!res.ok) throw new Error("No se pudo cargar /datasets.json");
   const json = await res.json();
-  return (json.datasets ?? []) as Dataset[];
+  return json.datasets || [];
 }
 
 const map = new maplibregl.Map({
   container: "map",
   style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  center: [-3.7038, 40.4168],
+  center: [-3.59222, 40.42186],
   zoom: 12,
   pitch: 60,
   maxPitch: 85,
+  antialias: true
+});
+
+// --- HUD DE COORDENADAS ---
+const hud = document.createElement("div");
+hud.id = "coordinates-hud";
+hud.style.cssText = `
+  position: absolute; bottom: 50px; left: 20px; 
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; background: rgba(15, 23, 42, 0.8); 
+  backdrop-filter: blur(8px); color: #f8fafc; 
+  font-family: system-ui, sans-serif; font-size: 13px; 
+  border-radius: 50px; z-index: 10; border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+`;
+hud.innerHTML = `
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+  <span id="coords-text">0.00000, 0.00000</span>
+`;
+document.body.appendChild(hud);
+
+map.on("mousemove", (e) => {
+  const text = document.getElementById("coords-text");
+  if (text) text.textContent = `${e.lngLat.lat.toFixed(5)}, ${e.lngLat.lng.toFixed(5)}`;
 });
 
 map.on("load", async () => {
+  map.flyTo({
+    center: [-3.59222, 40.42186],
+    zoom: 5,
+    speed: 0.8
+  });
+  map.setSky({
+    "sky-color": "#020617",
+    "sky-horizon-blend": 0.5,
+    "horizon-color": "#1e293b",
+    "horizon-fog-blend": 0.8,
+    "fog-color": "#0f172a",
+    "fog-ground-blend": 0.6
+  });
+
   const lidarControl = new LidarControl({
     title: "LiDAR Viewer",
-    collapsed: true,
+    collapsed: true, // <--- CAMBIO: Ahora aparece recogido por defecto
     pointSize: 2,
     colorScheme: "rgb",
-    pickable: false,
+    zOffsetEnabled: true,
+    zOffset: -700,
   });
 
   map.addControl(lidarControl, "top-right");
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-left");
+  map.addControl(new maplibregl.FullscreenControl(), "top-left");
+  map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true }), "top-left");
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: "metric" }), "bottom-left");
+
+  // Forzar el offset en cada carga
+  lidarControl.on("load", () => {
+    lidarControl.setZOffsetEnabled(true);
+    lidarControl.setZOffset(-700);
+  });
 
   try {
     const datasets = await loadDatasets();
-    for (const ds of datasets) {
-      lidarControl.loadPointCloud(ds.url);
-    }
-    if (datasets.length > 0) lidarControl.flyToPointCloud();
+
+    // 1) Cargamos todas las nubes (en paralelo)
+    await Promise.all(datasets.map((ds: any) => lidarControl.loadPointCloud(ds.url)));
+
+    // 2) Forzamos tu cámara SIEMPRE al punto que quieres
+    map.flyTo({
+      center: [-3.59222, 40.42186], // [lng, lat]
+      zoom: 14,
+      pitch: 60,
+      bearing: 0,
+      speed: 0.8,
+      essential: true
+    });
+
   } catch (e) {
     console.error("Error LiDAR:", e);
   }
