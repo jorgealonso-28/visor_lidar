@@ -11,13 +11,19 @@ async function loadDatasets() {
   return json.datasets || [];
 }
 
+const TARGET_CENTER: [number, number] = [-3.59222, 40.42186]; // [lng, lat]
+const TARGET_ZOOM = 14;
+const TARGET_PITCH = 60;
+
 const map = new maplibregl.Map({
   container: "map",
   style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  center: [-3.59222, 40.42186],
-  zoom: 12,
-  pitch: 60,
-  maxPitch: 85
+  center: TARGET_CENTER,
+  zoom: TARGET_ZOOM,
+  pitch: TARGET_PITCH,
+  bearing: 0,
+  maxPitch: 85,
+  antialias: true
 });
 
 // --- HUD DE COORDENADAS ---
@@ -46,12 +52,16 @@ map.on("mousemove", (e) => {
   if (text) text.textContent = `${e.lngLat.lat.toFixed(5)}, ${e.lngLat.lng.toFixed(5)}`;
 });
 
-map.on("load", async () => {
-  map.flyTo({
-    center: [-3.59222, 40.42186],
-    zoom: 5,
-    speed: 0.8
+function clampCamera() {
+  map.jumpTo({
+    center: TARGET_CENTER,
+    zoom: TARGET_ZOOM,
+    pitch: TARGET_PITCH,
+    bearing: 0
   });
+}
+
+map.on("load", async () => {
   map.setSky({
     "sky-color": "#020617",
     "sky-horizon-blend": 0.5,
@@ -63,20 +73,26 @@ map.on("load", async () => {
 
   const lidarControl = new LidarControl({
     title: "LiDAR Viewer",
-    collapsed: true, // <--- CAMBIO: Ahora aparece recogido por defecto
+    collapsed: true,
     pointSize: 2,
     colorScheme: "rgb",
     zOffsetEnabled: true,
     zOffset: -700,
+    autoZoom: false // <-- clave para quitar el “amago”
   });
 
   map.addControl(lidarControl, "top-right");
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-left");
   map.addControl(new maplibregl.FullscreenControl(), "top-left");
-  map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true }), "top-left");
+  map.addControl(
+    new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true
+    }),
+    "top-left"
+  );
   map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: "metric" }), "bottom-left");
 
-  // Forzar el offset en cada carga
   lidarControl.on("load", () => {
     lidarControl.setZOffsetEnabled(true);
     lidarControl.setZOffset(-700);
@@ -84,21 +100,16 @@ map.on("load", async () => {
 
   try {
     const datasets = await loadDatasets();
-
-    // 1) Cargamos todas las nubes (en paralelo)
     await Promise.all(datasets.map((ds: any) => lidarControl.loadPointCloud(ds.url)));
 
-    // 2) Forzamos tu cámara SIEMPRE al punto que quieres
-    map.flyTo({
-      center: [-3.59222, 40.42186], // [lng, lat]
-      zoom: 14,
-      pitch: 60,
-      bearing: 0,
-      speed: 0.8,
-      essential: true
+    // Clavamos cámara (sin animación) y hacemos aparecer el mapa ya estable
+    requestAnimationFrame(() => {
+      clampCamera();
+      setTimeout(clampCamera, 150); // segundo golpe por si acaso
+      document.getElementById("map")?.classList.add("ready");
     });
-
   } catch (e) {
     console.error("Error LiDAR:", e);
+    document.getElementById("map")?.classList.add("ready"); // que no se quede invisible si falla
   }
 });
